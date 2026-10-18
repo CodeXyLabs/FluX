@@ -1,0 +1,370 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>FluX — витрина и лаунчер игр</title>
+<meta name="description" content="FluX — лёгкий лаунчер и витрина игр. Скачайте установщик для Windows: установка без прав администратора, загрузки с докачкой, свои инструменты.">
+<style>
+  :root {
+    --bg: #0B0D12;
+    --bg2: #0A0B0F;
+    --bg3: #101A12;
+    --acid: #C6F432;
+    --acid-dim: rgba(198, 244, 50, 0.35);
+    --cyan: #8AE8FF;
+    --text: #E6E8EB;
+    --muted: #8A8F98;
+    --stroke: rgba(255, 255, 255, 0.14);
+    --mono: "Consolas", "Cascadia Mono", monospace;
+    --radius: 14px;
+    --max: 1080px;
+  }
+
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+
+  body {
+    margin: 0;
+    font-family: "Segoe UI", system-ui, -apple-system, sans-serif;
+    color: var(--text);
+    background:
+      radial-gradient(900px 520px at 85% -10%, rgba(138, 232, 255, 0.10), transparent 60%),
+      radial-gradient(760px 480px at -10% 20%, var(--acid-dim), transparent 55%),
+      linear-gradient(135deg, var(--bg), var(--bg2) 55%, var(--bg3));
+    background-attachment: fixed;
+    line-height: 1.55;
+    min-height: 100vh;
+  }
+
+  ::selection { background: var(--acid); color: #0B0D12; }
+
+  a { color: var(--cyan); }
+  a:hover { color: #c2f4ff; }
+
+  .wrap { max-width: var(--max); margin: 0 auto; padding: 0 24px; }
+
+  /* ——— шапка ——— */
+  header {
+    position: sticky; top: 0; z-index: 20;
+    backdrop-filter: blur(12px);
+    background: rgba(11, 13, 18, 0.72);
+    border-bottom: 1px solid var(--stroke);
+  }
+  .nav {
+    display: flex; align-items: center; gap: 18px;
+    height: 60px;
+  }
+  .brand {
+    display: flex; align-items: center; gap: 10px;
+    font-weight: 800; font-size: 20px; letter-spacing: 0.2px;
+    color: var(--text); text-decoration: none;
+  }
+  .brand .mark {
+    display: inline-block; width: 14px; height: 14px;
+    border-radius: 50%;
+    background: conic-gradient(from 0deg, var(--acid), var(--cyan), var(--acid));
+    animation: spin 6s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .nav .links { margin-left: auto; display: flex; gap: 16px; font-size: 14px; }
+  .nav .links a { color: var(--muted); text-decoration: none; transition: color 0.2s; }
+  .nav .links a:hover { color: var(--text); }
+
+  .btn {
+    display: inline-flex; align-items: center; gap: 10px;
+    padding: 13px 26px; border-radius: var(--radius);
+    font-weight: 700; font-size: 16px; text-decoration: none;
+    color: #0B0D12; background: linear-gradient(90deg, var(--acid), #D8FF5E);
+    box-shadow: 0 8px 28px rgba(198, 244, 50, 0.28);
+    border: none; cursor: pointer; transition: transform 0.18s ease, box-shadow 0.18s ease;
+  }
+  .btn:hover { transform: translateY(-2px); box-shadow: 0 12px 34px rgba(198, 244, 50, 0.4); }
+  .btn.secondary {
+    background: transparent; color: var(--text);
+    border: 1px solid var(--stroke); box-shadow: none;
+  }
+  .btn.secondary:hover { border-color: var(--acid); color: var(--acid); }
+  .btn .dl { font-size: 18px; }
+
+  /* ——— герой ——— */
+  .hero {
+    display: grid; grid-template-columns: 1.15fr 0.85fr; gap: 48px;
+    align-items: center; padding: 84px 0 72px;
+  }
+  .hero .kicker {
+    font-family: var(--mono); font-size: 13px; letter-spacing: 2px;
+    color: var(--acid); text-transform: uppercase; margin: 0 0 14px;
+  }
+  .hero h1 {
+    font-size: clamp(38px, 6vw, 64px); line-height: 1.04; margin: 0 0 18px;
+    font-weight: 800;
+    background: linear-gradient(90deg, var(--acid), var(--cyan));
+    -webkit-background-clip: text; background-clip: text; color: transparent;
+  }
+  .hero p.lead { font-size: 18px; color: #C5C9CE; max-width: 54ch; margin: 0 0 30px; }
+  .hero .actions { display: flex; flex-wrap: wrap; gap: 14px; align-items: center; }
+  .note { font-family: var(--mono); font-size: 12px; color: var(--muted); margin-top: 12px; }
+
+  /* терминал-виджед */
+  .terminal {
+    position: relative;
+    background: rgba(16, 20, 26, 0.82);
+    border: 1px solid var(--stroke);
+    border-radius: var(--radius);
+    box-shadow: 0 24px 60px rgba(0, 0, 0, 0.5);
+    overflow: hidden;
+  }
+  .terminal::before {
+    content: "";
+    position: absolute; inset: 0; padding: 1px;
+    border-radius: var(--radius);
+    background: linear-gradient(120deg, rgba(198,244,50,.55), transparent 35%, transparent 65%, rgba(138,232,255,.5));
+    -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+    -webkit-mask-composite: xor; mask-composite: exclude;
+    pointer-events: none;
+  }
+  .terminal .bar {
+    display: flex; align-items: center; gap: 8px; padding: 12px 16px;
+    border-bottom: 1px solid var(--stroke);
+    font-family: var(--mono); font-size: 12px; color: var(--muted);
+  }
+  .terminal .bar span { width: 10px; height: 10px; border-radius: 50%; display: inline-block; }
+  .terminal .bar b { font-weight: 600; color: var(--text); }
+  .terminal .body { padding: 18px; font-family: var(--mono); font-size: 13.5px; line-height: 1.7; }
+  .terminal .body .cur::after {
+    content: "▌"; color: var(--acid); animation: blink 1s steps(1) infinite;
+  }
+  @keyframes blink { 50% { opacity: 0; } }
+  .terminal .body .ok { color: var(--acid); }
+  .terminal .body .cy { color: var(--cyan); }
+  .terminal .body .dim { color: var(--muted); }
+  .terminal .body .st:hover { color: var(--text); cursor: pointer; text-decoration: underline; }
+
+  /* ——— секции ——— */
+  section { padding: 64px 0; }
+  .sec-head { max-width: 640px; margin-bottom: 40px; }
+  .sec-head h2 { font-size: clamp(26px, 3.4vw, 38px); margin: 0 0 12px; font-weight: 750; }
+  .sec-head p { color: var(--muted); margin: 0; font-size: 16px; }
+
+  .grid3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; }
+  .card {
+    background: rgba(255, 255, 255, 0.035);
+    border: 1px solid var(--stroke);
+    border-radius: var(--radius);
+    padding: 22px;
+    transition: transform 0.2s ease, border-color 0.2s ease, background 0.2s ease;
+  }
+  .card:hover { transform: translateY(-4px); border-color: rgba(198,244,50,0.45); background: rgba(255,255,255,0.05); }
+  .card .ic { font-size: 22px; margin-bottom: 10px; }
+  .card h3 { margin: 0 0 8px; font-size: 17px; }
+  .card p { margin: 0; color: var(--muted); font-size: 14.5px; }
+
+  /* шаги */
+  .steps { display: grid; grid-template-columns: repeat(4, 1fr); gap: 18px; counter-reset: step; }
+  .step { position: relative; }
+  .step .num {
+    font-family: var(--mono); font-size: 13px; color: var(--acid);
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 32px; height: 32px; border: 1px solid var(--acid-dim); border-radius: 9px;
+    margin-bottom: 12px;
+  }
+  .step h3 { margin: 0 0 6px; font-size: 16px; }
+  .step p { margin: 0; color: var(--muted); font-size: 14px; }
+
+  /* баннер скачивания */
+  .download {
+    margin: 16px 0 80px;
+    border-radius: calc(var(--radius) + 6px);
+    background: linear-gradient(135deg, rgba(198,244,50,.12), rgba(138,232,255,.10));
+    border: 1px solid var(--stroke);
+    padding: 48px 32px;
+    text-align: center;
+    position: relative; overflow: hidden;
+  }
+  .download::after {
+    content: ""; position: absolute; width: 420px; height: 420px; border-radius: 50%;
+    left: 50%; top: 50%; transform: translate(-50%, -50%);
+    background: radial-gradient(circle, rgba(198,244,50,0.18), transparent 65%);
+    animation: pulse 5s ease-in-out infinite;
+    pointer-events: none;
+  }
+  @keyframes pulse { 50% { transform: translate(-50%, -50%) scale(1.15); opacity: 0.6; } }
+  .download h2 { position: relative; z-index: 1; font-size: clamp(26px, 4vw, 40px); margin: 0 0 12px; }
+  .download p { position: relative; z-index: 1; color: var(--muted); max-width: 52ch; margin: 0 auto 26px; }
+  .download .btn { position: relative; z-index: 1; }
+
+  /* фидбек скачивания */
+  .dl-state {
+    position: relative; z-index: 1;
+    margin-top: 14px; font-family: var(--mono); font-size: 13px; color: var(--cyan); min-height: 20px;
+  }
+
+  footer {
+    border-top: 1px solid var(--stroke);
+    padding: 28px 0 40px; color: var(--muted); font-size: 13.5px;
+  }
+  footer .cols { display: flex; flex-wrap: wrap; gap: 24px; justify-content: space-between; }
+  footer .mono { font-family: var(--mono); }
+
+  .reveal { opacity: 0; transform: translateY(22px); transition: opacity 0.7s ease, transform 0.7s ease; }
+  .reveal.on { opacity: 1; transform: none; }
+
+  @media (max-width: 860px) {
+    .hero { grid-template-columns: 1fr; padding-top: 56px; gap: 36px; }
+    .grid3 { grid-template-columns: 1fr; }
+    .steps { grid-template-columns: 1fr 1fr; }
+    .nav .links { display: none; }
+  }
+  @media (max-width: 520px) { .steps { grid-template-columns: 1fr; } }
+
+  @media (prefers-reduced-motion: reduce) {
+    html { scroll-behavior: auto; }
+    .brand .mark, .terminal .body .cur::after, .download::after { animation: none; }
+    .reveal { opacity: 1; transform: none; transition: none; }
+    * { transition-duration: 0.01ms !important; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="wrap nav">
+    <a class="brand" href="#top"><span class="mark"></span>FluX</a>
+    <div class="links">
+      <a href="#features">Возможности</a>
+      <a href="#steps">Как начать</a>
+      <a href="#download">Скачать</a>
+    </div>
+    <a class="btn" href="#download"><span class="dl">↓</span> Скачать</a>
+  </div>
+</header>
+
+<main id="top">
+  <div class="wrap">
+    <section class="hero">
+      <div>
+        <p class="kicker">// витрина · лаунчер · платформа</p>
+        <h1>FluX — твои игры в одном окне</h1>
+        <p class="lead">Лёгкий лаунчер для Windows: витрина, библиотека, загрузки с докачкой и создание собственных игр — без установки чего-либо ещё. Установка в профиль пользователя, без прав администратора.</p>
+        <div class="actions">
+          <a class="btn" id="hero-dl" href="FluX-Setup.exe" download="FluX-Setup.exe"><span class="dl">↓</span> Скачать установщик</a>
+          <span class="note" id="hero-size">≈ 85 МБ · Windows 10/11</span>
+        </div>
+        <p class="note">Проверьте хэш: после установки найдите SHA-256 в разделе «Обновления» приложения.</p>
+      </div>
+
+      <div class="terminal" aria-label="Демонстрация установки FluX">
+        <div class="bar">
+          <span style="background:#FF5F56"></span>
+          <span style="background:#FFBD2E"></span>
+          <span style="background:#27C93F"></span>
+          <b style="margin-left:8px">FluX-Setup.exe</b>
+        </div>
+        <div class="body">
+          <div class="dim">$ скачать и запустить</div>
+          <div class="ok">✔ Профиль: %LOCALAPPDATA%\Programs\FluX</div>
+          <div class="ok">✔ Ярлыки: рабочий стол и «Пуск»</div>
+          <div class="ok">✔ Права администратора не нужны</div>
+          <div class="dim">$ flux --start</div>
+          <div class="cy">FluX запущен<span class="cur"></span></div>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <div class="wrap">
+    <section id="features">
+      <div class="sec-head reveal">
+        <h2>Что умеет FluX</h2>
+        <p>Один установщик — всё, что нужно для личной игровой полки.</p>
+      </div>
+      <div class="grid3">
+        <div class="card reveal"><div class="ic">🛍️</div><h3>Витрина</h3><p>Каталог игр с обложками, подборками и карточками. Покупки бесплатны — без кошельков и виртуальных денег.</p></div>
+        <div class="card reveal"><div class="ic">📚</div><h3>Библиотека</h3><p>Все твои игры в одном списке с разделом «Продолжить». Учитывается время сессий.</p></div>
+        <div class="card reveal"><div class="ic">⬇️</div><h3>Умные загрузки</h3><p>Скачивание с докачкой, очередь с восстановлением и проверка SHA-256 после загрузки.</p></div>
+        <div class="card reveal"><div class="ic">🎮</div><h3>Запуск и учёт</h3><p>Игры запускаются прямо из библиотеки, время игровых сессий записывается автоматически.</p></div>
+        <div class="card reveal"><div class="ic">🛠️</div><h3>Конструктор игр</h3><p>Кабинет создателя: загрузи билд, обложку, логотип и отправь на модерацию.</p></div>
+        <div class="card reveal"><div class="ic">🛡️</div><h3>Безопасность</h3><p>Локальные данные, пароль только как PBKDF2-хэш, вход без привязки к почте по умолчанию.</p></div>
+      </div>
+    </section>
+  </div>
+
+  <div class="wrap">
+    <section id="steps">
+      <div class="sec-head reveal">
+        <h2>Как начать</h2>
+        <p>Три шага до первой запущенной игры.</p>
+      </div>
+      <div class="steps">
+        <div class="step reveal"><div class="num">01</div><h3>Скачай</h3><p>Загрузи установщик одним файлом — ничего дополнительного ставить не нужно.</p></div>
+        <div class="step reveal"><div class="num">02</div><h3>Запусти</h3><p>Двойной клик: приложение ставится в профиль и создаёт ярлыки.</p></div>
+        <div class="step reveal"><div class="num">03</div><h3>Создай аккаунт</h3><p>Логин, пароль и никнейм — вход сразу, без писем и кодов.</p></div>
+        <div class="step reveal"><div class="num">04</div><h3>Играй</h3><p>Добавляй игры в библиотеку и запускай в один клик.</p></div>
+      </div>
+    </section>
+  </div>
+
+  <div class="wrap">
+    <div class="download" id="download">
+      <h2>Готов начать?</h2>
+      <p>FluX устанавливается за минуту. Файл один, подпись платформы не требуется, права администратора не нужны.</p>
+      <a class="btn" id="dl-main" href="FluX-Setup.exe" download="FluX-Setup.exe"><span class="dl">↓</span> Скачать FluX для Windows</a>
+      <p class="dl-state" id="dl-state"></p>
+      <p class="note">Windows 10/11 · x64 · FluX 1.0.0</p>
+    </div>
+  </div>
+</main>
+
+<footer>
+  <div class="wrap cols">
+    <div>© 2026 FluX. Внутренний проект для витрины и лаунчера игр.</div>
+    <div class="mono">flux · v1.0.0 · win-x64</div>
+  </div>
+</footer>
+
+<script>
+  // Плавное появление секций при прокрутке (с учётом prefers-reduced-motion)
+  var io = new IntersectionObserver(function (entries) {
+    entries.forEach(function (e) { if (e.isIntersecting) e.target.classList.add("on"); });
+  }, { threshold: 0.12 });
+  document.querySelectorAll(".reveal").forEach(function (el) { io.observe(el); });
+
+  // Интерактив в терминале: клик по строке запуска
+  var termStart = document.querySelector(".terminal .body");
+  if (termStart) {
+    termStart.addEventListener("click", function () {
+      var ln = document.querySelector(".terminal .body .cy");
+      if (ln) ln.classList.contains("st") || (function () {
+        var node = ln; while (node && node.nodeType === 3) node = node.parentNode;
+        setTimeout(function () { ln.style.color = "#E6E8EB"; }, 60);
+      }());
+    });
+  }
+  document.querySelectorAll(".terminal .cy").forEach(function (n) { n.classList.add("st"); });
+
+  // Обратная связь по скачиванию + показ реального размера файла
+  function wireDownload(id, stateId) {
+    var link = document.getElementById(id);
+    if (!link) return;
+    link.addEventListener("click", function () {
+      var st = document.getElementById(stateId);
+      if (st) st.textContent = "Загрузка началась. Если не сохранилось — проверьте папку «Загрузки».";
+    });
+  }
+  wireDownload("hero-dl", "dl-state");
+  wireDownload("dl-main", "dl-state");
+
+  fetch("FluX-Setup.exe", { method: "HEAD" })
+    .then(function (r) {
+      var size = parseInt(r.headers.get("Content-Length") || "0", 10);
+      if (size > 0) {
+        var mb = (size / 1048576).toFixed(1);
+        var el = document.getElementById("hero-size");
+        if (el) el.textContent = mb + " МБ · Windows 10/11";
+      }
+    })
+    .catch(function () { /* файл недоступен локально — оставляем надпись по умолчанию */ });
+</script>
+</body>
+</html>
