@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="ru">
 <head>
 <meta charset="utf-8">
@@ -248,8 +248,8 @@
         <h1>FluX — твои игры в одном окне</h1>
         <p class="lead">Лёгкий лаунчер для Windows: витрина, библиотека, загрузки с докачкой и создание собственных игр — без установки чего-либо ещё. Установка в профиль пользователя, без прав администратора.</p>
         <div class="actions">
-          <a class="btn" id="hero-dl" href="FluX-Setup.exe" download="FluX-Setup.exe"><span class="dl">↓</span> Скачать установщик</a>
-          <span class="note" id="hero-size">≈ 85 МБ · Windows 10/11</span>
+          <a class="btn" id="hero-dl" href="https://github.com/CodeXyLabs/FluX/releases/download/v1.0.0/FluX-Setup.exe"><span class="dl">↓</span> Скачать установщик</a>
+          <span class="note" id="hero-size">85,2 МБ · Windows 10/11 · прямая ссылка с GitHub</span>
         </div>
         <p class="note">Проверьте хэш: после установки найдите SHA-256 в разделе «Обновления» приложения.</p>
       </div>
@@ -309,7 +309,7 @@
     <div class="download" id="download">
       <h2>Готов начать?</h2>
       <p>FluX устанавливается за минуту. Файл один, подпись платформы не требуется, права администратора не нужны.</p>
-      <a class="btn" id="dl-main" href="FluX-Setup.exe" download="FluX-Setup.exe"><span class="dl">↓</span> Скачать FluX для Windows</a>
+      <a class="btn" id="dl-main" href="https://github.com/CodeXyLabs/FluX/releases/download/v1.0.0/FluX-Setup.exe"><span class="dl">↓</span> Скачать FluX для Windows</a>
       <p class="dl-state" id="dl-state"></p>
       <p class="note">Windows 10/11 · x64 · FluX 1.0.0</p>
     </div>
@@ -354,17 +354,6 @@
   }
   wireDownload("hero-dl", "dl-state");
   wireDownload("dl-main", "dl-state");
-
-  fetch("FluX-Setup.exe", { method: "HEAD" })
-    .then(function (r) {
-      var size = parseInt(r.headers.get("Content-Length") || "0", 10);
-      if (size > 0) {
-        var mb = (size / 1048576).toFixed(1);
-        var el = document.getElementById("hero-size");
-        if (el) el.textContent = mb + " МБ · Windows 10/11";
-      }
-    })
-    .catch(function () { /* файл недоступен локально — оставляем надпись по умолчанию */ });
 </script>
 </body>
 </html>
