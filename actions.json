@@ -1,0 +1,1 @@
+[{"type":"click","selector":"#hero-dl"},{"type":"assert","selector":"#dl-state","property":"text","equals":"Загрузка началась. Если не сохранилось — проверьте папку «Загрузки»."}]
