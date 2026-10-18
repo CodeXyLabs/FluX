@@ -4,21 +4,26 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>FluX — витрина и лаунчер игр</title>
-<meta name="description" content="FluX — лёгкий лаунчер и витрина игр. Скачайте установщик для Windows: установка без прав администратора, загрузки с докачкой, свои инструменты.">
+<meta name="description" content="FluX — лёгкий лаунчер и витрина игр. Скачайте установщик для Windows: без прав администратора, докачка, свои инструменты, игры бесплатно.">
+<meta property="og:title" content="FluX — витрина и лаунчер игр">
+<meta property="og:description" content="Установка за минуту. Без прав администратора. Игры бесплатно.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' y1='0' x2='1' y2='1'%3E%3Cstop offset='0' stop-color='%23C6F432'/%3E%3Cstop offset='1' stop-color='%238AE8FF'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='64' height='64' rx='16' fill='%230B0D12'/%3E%3Ccircle cx='32' cy='32' r='20' fill='none' stroke='url(%23g)' stroke-width='6'/%3E%3Ccircle cx='32' cy='32' r='7' fill='url(%23g)'/%3E%3C/svg%3E">
 <style>
   :root {
     --bg: #0B0D12;
-    --bg2: #0A0B0F;
-    --bg3: #101A12;
+    --panel: rgba(255, 255, 255, 0.04);
+    --panel-2: rgba(255, 255, 255, 0.06);
     --acid: #C6F432;
-    --acid-dim: rgba(198, 244, 50, 0.35);
+    --acid-hi: #DFFF6E;
+    --acid-dim: rgba(198, 244, 50, 0.28);
     --cyan: #8AE8FF;
-    --text: #E6E8EB;
+    --text: #EDF0F2;
     --muted: #8A8F98;
-    --stroke: rgba(255, 255, 255, 0.14);
-    --mono: "Consolas", "Cascadia Mono", monospace;
-    --radius: 14px;
-    --max: 1080px;
+    --stroke: rgba(255, 255, 255, 0.12);
+    --mono: "Consolas", "Cascadia Mono", ui-monospace, monospace;
+    --r: 16px;
+    --max: 1120px;
+    --ease: cubic-bezier(.22, .61, .36, 1);
   }
 
   * { box-sizing: border-box; }
@@ -28,209 +33,283 @@
     margin: 0;
     font-family: "Segoe UI", system-ui, -apple-system, sans-serif;
     color: var(--text);
-    background:
-      radial-gradient(900px 520px at 85% -10%, rgba(138, 232, 255, 0.10), transparent 60%),
-      radial-gradient(760px 480px at -10% 20%, var(--acid-dim), transparent 55%),
-      linear-gradient(135deg, var(--bg), var(--bg2) 55%, var(--bg3));
-    background-attachment: fixed;
-    line-height: 1.55;
+    line-height: 1.6;
+    background: var(--bg);
     min-height: 100vh;
+    overflow-x: hidden;
   }
 
-  ::selection { background: var(--acid); color: #0B0D12; }
+  /* сетка-подложка в духе консоли */
+  body::before {
+    content: "";
+    position: fixed; inset: 0; z-index: -2;
+    background:
+      linear-gradient(rgba(255,255,255,0.028) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255,255,255,0.028) 1px, transparent 1px);
+    background-size: 44px 44px;
+    -webkit-mask-image: radial-gradient(ellipse 90% 70% at 50% 0%, #000 30%, transparent 75%);
+    mask-image: radial-gradient(ellipse 90% 70% at 50% 0%, #000 30%, transparent 75%);
+  }
 
-  a { color: var(--cyan); }
-  a:hover { color: #c2f4ff; }
+  /* плавающие орбы */
+  .orb {
+    position: fixed; z-index: -1; border-radius: 50%;
+    filter: blur(80px);
+    pointer-events: none;
+    opacity: .5;
+  }
+  .orb-a { width: 560px; height: 560px; top: -160px; right: -120px; background: rgba(198,244,50,.16); animation: floatA 18s var(--ease) infinite alternate; }
+  .orb-b { width: 480px; height: 480px; top: 34%; left: -180px; background: rgba(138,232,255,.13); animation: floatB 22s var(--ease) infinite alternate; }
+  .orb-c { width: 420px; height: 420px; bottom: -140px; right: 14%; background: rgba(167,139,250,.12); animation: floatA 26s ease-in-out infinite alternate-reverse; }
+  @keyframes floatA { from { transform: translate3d(0,0,0) scale(1); } to { transform: translate3d(-70px, 50px, 0) scale(1.15); } }
+  @keyframes floatB { from { transform: translate3d(0,0,0) scale(1.1); } to { transform: translate3d(80px, -60px, 0) scale(0.95); } }
+
+  ::selection { background: var(--acid); color: #0B0D12; }
+  a { color: var(--cyan); transition: color .2s; }
+  a:hover { color: #d5f7ff; }
 
   .wrap { max-width: var(--max); margin: 0 auto; padding: 0 24px; }
 
   /* ——— шапка ——— */
   header {
-    position: sticky; top: 0; z-index: 20;
-    backdrop-filter: blur(12px);
-    background: rgba(11, 13, 18, 0.72);
-    border-bottom: 1px solid var(--stroke);
+    position: sticky; top: 0; z-index: 30;
+    transition: background .3s, box-shadow .3s, border-color .3s;
+    border-bottom: 1px solid transparent;
+    background: rgba(11, 13, 18, 0.55);
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
   }
-  .nav {
-    display: flex; align-items: center; gap: 18px;
-    height: 60px;
-  }
+  header.scrolled { background: rgba(11, 13, 18, 0.82); border-color: var(--stroke); box-shadow: 0 10px 40px rgba(0,0,0,.35); }
+  .nav { display: flex; align-items: center; gap: 20px; height: 66px; }
   .brand {
-    display: flex; align-items: center; gap: 10px;
-    font-weight: 800; font-size: 20px; letter-spacing: 0.2px;
+    display: flex; align-items: center; gap: 11px;
+    font-weight: 800; font-size: 21px; letter-spacing: .2px;
     color: var(--text); text-decoration: none;
   }
-  .brand .mark {
-    display: inline-block; width: 14px; height: 14px;
-    border-radius: 50%;
-    background: conic-gradient(from 0deg, var(--acid), var(--cyan), var(--acid));
-    animation: spin 6s linear infinite;
+  .brand .mark { width: 26px; height: 26px; display: grid; place-items: center; }
+  .brand .mark svg { width: 26px; height: 26px; }
+  .nav .links { margin-left: auto; display: flex; gap: 6px; font-size: 14px; }
+  .nav .links a {
+    color: var(--muted); text-decoration: none; padding: 8px 14px;
+    border-radius: 999px; transition: color .2s, background .2s;
   }
-  @keyframes spin { to { transform: rotate(360deg); } }
-  .nav .links { margin-left: auto; display: flex; gap: 16px; font-size: 14px; }
-  .nav .links a { color: var(--muted); text-decoration: none; transition: color 0.2s; }
-  .nav .links a:hover { color: var(--text); }
+  .nav .links a:hover { color: var(--text); background: rgba(255,255,255,.06); }
 
   .btn {
+    --btn-fg: #0B0D12;
+    position: relative; overflow: hidden;
     display: inline-flex; align-items: center; gap: 10px;
-    padding: 13px 26px; border-radius: var(--radius);
+    padding: 14px 28px; border-radius: 14px;
     font-weight: 700; font-size: 16px; text-decoration: none;
-    color: #0B0D12; background: linear-gradient(90deg, var(--acid), #D8FF5E);
-    box-shadow: 0 8px 28px rgba(198, 244, 50, 0.28);
-    border: none; cursor: pointer; transition: transform 0.18s ease, box-shadow 0.18s ease;
+    color: var(--btn-fg);
+    background: linear-gradient(120deg, var(--acid), var(--acid-hi));
+    box-shadow: 0 10px 32px rgba(198, 244, 50, 0.26), inset 0 1px 0 rgba(255,255,255,.4);
+    border: none; cursor: pointer;
+    transition: transform .2s var(--ease), box-shadow .25s var(--ease);
   }
-  .btn:hover { transform: translateY(-2px); box-shadow: 0 12px 34px rgba(198, 244, 50, 0.4); }
-  .btn.secondary {
-    background: transparent; color: var(--text);
-    border: 1px solid var(--stroke); box-shadow: none;
+  .btn::after {
+    content: ""; position: absolute; top: 0; left: -70%; width: 45%; height: 100%;
+    background: linear-gradient(100deg, transparent, rgba(255,255,255,.55), transparent);
+    transform: skewX(-20deg);
+    animation: shine 3.6s ease-in-out infinite;
   }
-  .btn.secondary:hover { border-color: var(--acid); color: var(--acid); }
-  .btn .dl { font-size: 18px; }
+  @keyframes shine { 0%, 55% { left: -70%; } 85%, 100% { left: 130%; } }
+  .btn:hover { transform: translateY(-2px); box-shadow: 0 16px 42px rgba(198, 244, 50, 0.4), inset 0 1px 0 rgba(255,255,255,.5); }
+  .btn:active { transform: translateY(0); }
+  .btn.secondary { background: transparent; color: var(--text); border: 1px solid var(--stroke); box-shadow: none; }
+  .btn.secondary:hover { border-color: var(--acid); color: var(--acid); box-shadow: 0 0 24px rgba(198,244,50,.15); }
+  .btn .dl { font-size: 20px; line-height: 1; }
+  .btn.small { padding: 9px 18px; font-size: 14px; border-radius: 11px; }
 
   /* ——— герой ——— */
-  .hero {
-    display: grid; grid-template-columns: 1.15fr 0.85fr; gap: 48px;
-    align-items: center; padding: 84px 0 72px;
-  }
+  .hero { display: grid; grid-template-columns: 1.12fr .88fr; gap: 56px; align-items: center; padding: 92px 0 80px; }
   .hero .kicker {
-    font-family: var(--mono); font-size: 13px; letter-spacing: 2px;
-    color: var(--acid); text-transform: uppercase; margin: 0 0 14px;
+    font-family: var(--mono); font-size: 12.5px; letter-spacing: 3px; color: var(--acid);
+    text-transform: uppercase; margin: 0 0 16px; display: inline-flex; align-items: center; gap: 10px;
   }
+  .hero .kicker::before { content: ""; width: 26px; height: 1px; background: var(--acid); opacity: .6; }
   .hero h1 {
-    font-size: clamp(38px, 6vw, 64px); line-height: 1.04; margin: 0 0 18px;
-    font-weight: 800;
-    background: linear-gradient(90deg, var(--acid), var(--cyan));
+    font-size: clamp(38px, 5.6vw, 62px); line-height: 1.04; margin: 0 0 20px; font-weight: 800; letter-spacing: -.5px;
+    background: linear-gradient(95deg, var(--acid) 10%, var(--cyan) 55%, #A78BFA 100%);
     -webkit-background-clip: text; background-clip: text; color: transparent;
   }
-  .hero p.lead { font-size: 18px; color: #C5C9CE; max-width: 54ch; margin: 0 0 30px; }
+  .hero p.lead { font-size: 17.5px; color: #C6CBD0; max-width: 52ch; margin: 0 0 30px; }
   .hero .actions { display: flex; flex-wrap: wrap; gap: 14px; align-items: center; }
   .note { font-family: var(--mono); font-size: 12px; color: var(--muted); margin-top: 12px; }
+  .pill-row { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 22px; }
+  .pill {
+    font-family: var(--mono); font-size: 12px; color: var(--muted);
+    border: 1px solid var(--stroke); border-radius: 999px; padding: 6px 12px;
+    background: rgba(255,255,255,.03);
+  }
+  .pill b { color: var(--text); font-weight: 600; }
 
-  /* терминал-виджед */
+  /* терминал */
+  .stage { position: relative; }
   .terminal {
     position: relative;
-    background: rgba(16, 20, 26, 0.82);
-    border: 1px solid var(--stroke);
-    border-radius: var(--radius);
-    box-shadow: 0 24px 60px rgba(0, 0, 0, 0.5);
+    background: rgba(14, 18, 24, 0.9);
+    border-radius: 18px;
+    box-shadow: 0 40px 90px rgba(0,0,0,.55), 0 0 0 1px var(--stroke), 0 0 60px rgba(138,232,255,.06);
     overflow: hidden;
   }
   .terminal::before {
-    content: "";
-    position: absolute; inset: 0; padding: 1px;
-    border-radius: var(--radius);
-    background: linear-gradient(120deg, rgba(198,244,50,.55), transparent 35%, transparent 65%, rgba(138,232,255,.5));
+    content: ""; position: absolute; inset: 0; padding: 1px; border-radius: 18px; pointer-events: none;
+    background: linear-gradient(130deg, rgba(198,244,50,.6), transparent 30%, transparent 70%, rgba(138,232,255,.55));
     -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
     -webkit-mask-composite: xor; mask-composite: exclude;
-    pointer-events: none;
   }
   .terminal .bar {
-    display: flex; align-items: center; gap: 8px; padding: 12px 16px;
+    display: flex; align-items: center; gap: 8px; padding: 13px 18px;
     border-bottom: 1px solid var(--stroke);
     font-family: var(--mono); font-size: 12px; color: var(--muted);
   }
-  .terminal .bar span { width: 10px; height: 10px; border-radius: 50%; display: inline-block; }
-  .terminal .bar b { font-weight: 600; color: var(--text); }
-  .terminal .body { padding: 18px; font-family: var(--mono); font-size: 13.5px; line-height: 1.7; }
-  .terminal .body .cur::after {
-    content: "▌"; color: var(--acid); animation: blink 1s steps(1) infinite;
-  }
-  @keyframes blink { 50% { opacity: 0; } }
+  .terminal .bar span { width: 11px; height: 11px; border-radius: 50%; display: inline-block; }
+  .terminal .bar .t { margin-left: 10px; letter-spacing: .5px; }
+  .terminal .body { padding: 20px; font-family: var(--mono); font-size: 13.5px; line-height: 1.9; }
   .terminal .body .ok { color: var(--acid); }
   .terminal .body .cy { color: var(--cyan); }
   .terminal .body .dim { color: var(--muted); }
-  .terminal .body .st:hover { color: var(--text); cursor: pointer; text-decoration: underline; }
+  .terminal .body .row { display: flex; gap: 10px; }
+  .terminal .bar-progress { height: 2px; background: rgba(198,244,50,.22); margin-top: 10px; border-radius: 2px; overflow: hidden; }
+  .terminal .bar-progress i { display: block; height: 100%; width: 0; background: linear-gradient(90deg, var(--acid), var(--cyan)); animation: progress 2.6s var(--ease) forwards; }
+  @keyframes progress { to { width: 100%; } }
+  .terminal .bar-progress i.run { animation-delay: 1.6s; }
+  .terminal .cur::after { content: "▌"; color: var(--acid); animation: blink 1s steps(1) infinite; margin-left: 2px; }
+  @keyframes blink { 50% { opacity: 0; } }
+  .float-tag {
+    position: absolute; right: -16px; bottom: 34px; z-index: 2;
+    display: flex; align-items: center; gap: 10px;
+    background: rgba(14,18,24,.92); border: 1px solid var(--stroke);
+    border-radius: 14px; padding: 12px 16px; font-size: 13px; font-weight: 600;
+    box-shadow: 0 18px 44px rgba(0,0,0,.45);
+    animation: bob 5.5s ease-in-out infinite;
+  }
+  .float-tag .dot { width: 10px; height: 10px; border-radius: 50%; background: var(--acid); box-shadow: 0 0 12px var(--acid); animation: pulseDot 1.8s ease-in-out infinite; }
+  @keyframes pulseDot { 50% { box-shadow: 0 0 22px var(--acid); opacity: .7; } }
+  @keyframes bob { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-8px); } }
 
   /* ——— секции ——— */
-  section { padding: 64px 0; }
-  .sec-head { max-width: 640px; margin-bottom: 40px; }
-  .sec-head h2 { font-size: clamp(26px, 3.4vw, 38px); margin: 0 0 12px; font-weight: 750; }
+  section { padding: 72px 0; }
+  .sec-head { max-width: 660px; margin-bottom: 44px; }
+  .sec-head .idx { font-family: var(--mono); font-size: 12.5px; letter-spacing: 3px; color: var(--acid); text-transform: uppercase; margin: 0 0 10px; }
+  .sec-head h2 { font-size: clamp(27px, 3.6vw, 40px); margin: 0 0 12px; font-weight: 800; letter-spacing: -.4px; }
   .sec-head p { color: var(--muted); margin: 0; font-size: 16px; }
 
   .grid3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; }
   .card {
-    background: rgba(255, 255, 255, 0.035);
+    position: relative;
+    background: var(--panel);
     border: 1px solid var(--stroke);
-    border-radius: var(--radius);
-    padding: 22px;
-    transition: transform 0.2s ease, border-color 0.2s ease, background 0.2s ease;
+    border-radius: var(--r);
+    padding: 24px;
+    overflow: hidden;
+    transition: transform .25s var(--ease), border-color .25s, background .25s;
   }
-  .card:hover { transform: translateY(-4px); border-color: rgba(198,244,50,0.45); background: rgba(255,255,255,0.05); }
-  .card .ic { font-size: 22px; margin-bottom: 10px; }
+  .card::before {
+    content: ""; position: absolute; inset: 0; opacity: 0; transition: opacity .3s;
+    background: radial-gradient(320px 200px at 20% 0%, rgba(198,244,50,.1), transparent 70%);
+  }
+  .card:hover { transform: translateY(-5px); border-color: rgba(198,244,50,.4); background: var(--panel-2); }
+  .card:hover::before { opacity: 1; }
+  .card .ic {
+    width: 44px; height: 44px; border-radius: 12px; margin-bottom: 16px;
+    display: grid; place-items: center; font-size: 21px;
+    background: linear-gradient(140deg, rgba(198,244,50,.16), rgba(138,232,255,.12));
+    border: 1px solid rgba(198,244,50,.25);
+  }
   .card h3 { margin: 0 0 8px; font-size: 17px; }
   .card p { margin: 0; color: var(--muted); font-size: 14.5px; }
 
-  /* шаги */
-  .steps { display: grid; grid-template-columns: repeat(4, 1fr); gap: 18px; counter-reset: step; }
+  /* таймлайн шагов */
+  .steps { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; position: relative; }
+  .steps::before {
+    content: ""; position: absolute; top: 17px; left: 5%; right: 5%; height: 1px;
+    background: linear-gradient(90deg, var(--acid-dim), var(--stroke), var(--acid-dim));
+  }
   .step { position: relative; }
   .step .num {
-    font-family: var(--mono); font-size: 13px; color: var(--acid);
-    display: inline-flex; align-items: center; justify-content: center;
-    width: 32px; height: 32px; border: 1px solid var(--acid-dim); border-radius: 9px;
-    margin-bottom: 12px;
+    position: relative; z-index: 1;
+    width: 36px; height: 36px; border-radius: 50%;
+    display: grid; place-items: center;
+    font-family: var(--mono); font-size: 13px; font-weight: 700;
+    color: var(--acid);
+    background: #0E1218;
+    border: 1px solid rgba(198,244,50,.5);
+    box-shadow: 0 0 0 5px var(--bg), 0 0 22px rgba(198,244,50,.18);
+    margin-bottom: 16px;
   }
   .step h3 { margin: 0 0 6px; font-size: 16px; }
   .step p { margin: 0; color: var(--muted); font-size: 14px; }
 
   /* баннер скачивания */
   .download {
-    margin: 16px 0 80px;
-    border-radius: calc(var(--radius) + 6px);
-    background: linear-gradient(135deg, rgba(198,244,50,.12), rgba(138,232,255,.10));
+    position: relative; margin: 10px 0 88px;
+    border-radius: 24px; padding: 56px 32px; text-align: center;
+    overflow: hidden;
+    background:
+      radial-gradient(600px 300px at 50% -40%, rgba(198,244,50,.16), transparent 70%),
+      linear-gradient(150deg, rgba(198,244,50,.08), rgba(138,232,255,.06) 55%, rgba(167,139,250,.08));
     border: 1px solid var(--stroke);
-    padding: 48px 32px;
-    text-align: center;
-    position: relative; overflow: hidden;
   }
-  .download::after {
-    content: ""; position: absolute; width: 420px; height: 420px; border-radius: 50%;
-    left: 50%; top: 50%; transform: translate(-50%, -50%);
-    background: radial-gradient(circle, rgba(198,244,50,0.18), transparent 65%);
-    animation: pulse 5s ease-in-out infinite;
-    pointer-events: none;
+  .download .ring {
+    content: ""; position: absolute; inset: -1px; border-radius: 24px; pointer-events: none;
+    background: conic-gradient(from 0deg, transparent 0%, rgba(198,244,50,.55) 12%, transparent 26%, transparent 55%, rgba(138,232,255,.5) 68%, transparent 82%);
+    animation: spinRing 7s linear infinite;
+    -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+    -webkit-mask-composite: xor; mask-composite: exclude; padding: 1.5px;
   }
-  @keyframes pulse { 50% { transform: translate(-50%, -50%) scale(1.15); opacity: 0.6; } }
-  .download h2 { position: relative; z-index: 1; font-size: clamp(26px, 4vw, 40px); margin: 0 0 12px; }
-  .download p { position: relative; z-index: 1; color: var(--muted); max-width: 52ch; margin: 0 auto 26px; }
+  @keyframes spinRing { to { transform: rotate(360deg); } }
+  .download h2 { position: relative; z-index: 1; font-size: clamp(28px, 4.4vw, 44px); margin: 0 0 14px; font-weight: 800; letter-spacing: -.5px; }
+  .download p { position: relative; z-index: 1; color: var(--muted); max-width: 54ch; margin: 0 auto 28px; }
   .download .btn { position: relative; z-index: 1; }
+  .dl-meta { position: relative; z-index: 1; margin-top: 16px; display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; }
+  .dl-state { position: relative; z-index: 1; font-family: var(--mono); font-size: 13px; color: var(--cyan); min-height: 22px; margin: 12px 0 0; }
 
-  /* фидбек скачивания */
-  .dl-state {
-    position: relative; z-index: 1;
-    margin-top: 14px; font-family: var(--mono); font-size: 13px; color: var(--cyan); min-height: 20px;
-  }
-
-  footer {
-    border-top: 1px solid var(--stroke);
-    padding: 28px 0 40px; color: var(--muted); font-size: 13.5px;
-  }
-  footer .cols { display: flex; flex-wrap: wrap; gap: 24px; justify-content: space-between; }
+  footer { border-top: 1px solid var(--stroke); padding: 30px 0 44px; color: var(--muted); font-size: 13.5px; background: rgba(11,13,18,.6); }
+  footer .cols { display: flex; flex-wrap: wrap; gap: 22px; justify-content: space-between; align-items: center; }
+  footer a { color: var(--muted); text-decoration: none; margin-left: 14px; }
+  footer a:hover { color: var(--acid); }
   footer .mono { font-family: var(--mono); }
+  footer .logo { display: inline-grid; place-items: center; background: linear-gradient(140deg, rgba(198,244,50,.16), rgba(138,232,255,.1)); border: 1px solid rgba(198,244,50,.25); width: 30px; height: 30px; border-radius: 9px; margin-right: 8px; vertical-align: middle; }
 
-  .reveal { opacity: 0; transform: translateY(22px); transition: opacity 0.7s ease, transform 0.7s ease; }
+  .reveal { opacity: 0; transform: translateY(24px); transition: opacity .8s var(--ease), transform .8s var(--ease); }
   .reveal.on { opacity: 1; transform: none; }
 
-  @media (max-width: 860px) {
-    .hero { grid-template-columns: 1fr; padding-top: 56px; gap: 36px; }
+  @media (max-width: 900px) {
+    .hero { grid-template-columns: 1fr; padding-top: 64px; gap: 44px; }
     .grid3 { grid-template-columns: 1fr; }
     .steps { grid-template-columns: 1fr 1fr; }
+    .steps::before { display: none; }
     .nav .links { display: none; }
+    .float-tag { right: 6px; }
   }
-  @media (max-width: 520px) { .steps { grid-template-columns: 1fr; } }
+  @media (max-width: 540px) {
+    .steps { grid-template-columns: 1fr; }
+    .download { padding: 44px 20px; }
+  }
 
   @media (prefers-reduced-motion: reduce) {
     html { scroll-behavior: auto; }
-    .brand .mark, .terminal .body .cur::after, .download::after { animation: none; }
+    .orb, .btn::after, .download .ring, .float-tag, .terminal .bar-progress i, .brand .mark { animation: none; }
     .reveal { opacity: 1; transform: none; transition: none; }
-    * { transition-duration: 0.01ms !important; }
+    * { transition-duration: .01ms !important; animation-duration: .01ms !important; }
   }
 </style>
 </head>
 <body>
+<div class="orb orb-a"></div>
+<div class="orb orb-b"></div>
+<div class="orb orb-c"></div>
 
-<header>
+<header id="site-header">
   <div class="wrap nav">
-    <a class="brand" href="#top"><span class="mark"></span>FluX</a>
+    <a class="brand" href="#top">
+      <span class="mark">
+        <svg viewBox="0 0 64 64" fill="none"><defs><linearGradient id="mg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#C6F432"/><stop offset="1" stop-color="#8AE8FF"/></linearGradient></defs><rect width="64" height="64" rx="18" fill="#14181F"/><circle cx="32" cy="32" r="21" stroke="url(#mg)" stroke-width="6"/><circle cx="32" cy="32" r="7" fill="url(#mg)"/></svg>
+      </span>
+      FluX
+    </a>
     <div class="links">
       <a href="#features">Возможности</a>
       <a href="#steps">Как начать</a>
@@ -242,33 +321,43 @@
 
 <main id="top">
   <div class="wrap">
-    <section class="hero">
+    <section class="hero" style="padding-top:88px">
       <div>
-        <p class="kicker">// витрина · лаунчер · платформа</p>
+        <p class="kicker">витрина · лаунчер · платформа</p>
         <h1>FluX — твои игры в одном окне</h1>
-        <p class="lead">Лёгкий лаунчер для Windows: витрина, библиотека, загрузки с докачкой и создание собственных игр — без установки чего-либо ещё. Установка в профиль пользователя, без прав администратора.</p>
+        <p class="lead">Лёгкий лаунчер для Windows: витрина, библиотека, загрузки с докачкой и создание собственных игр — без установки чего-либо ещё. Ставится в профиль пользователя, без прав администратора.</p>
         <div class="actions">
           <a class="btn" id="hero-dl" href="https://github.com/CodeXyLabs/FluX/releases/download/v1.0.0/FluX-Setup.exe"><span class="dl">↓</span> Скачать установщик</a>
-          <span class="note" id="hero-size">85,2 МБ · Windows 10/11 · прямая ссылка с GitHub</span>
+          <span class="btn secondary small" tabindex="0">85,2 МБ</span>
         </div>
-        <p class="note">Проверьте хэш: после установки найдите SHA-256 в разделе «Обновления» приложения.</p>
+        <div class="pill-row">
+          <span class="pill">Windows <b>10 / 11</b></span>
+          <span class="pill">x64 · <b>один файл</b></span>
+          <span class="pill">без <b>админа</b></span>
+          <span class="pill">без <b>кошелька</b></span>
+        </div>
+        <p class="note">Проверьте SHA-256 в разделе «Обновления» приложения после установки.</p>
       </div>
 
-      <div class="terminal" aria-label="Демонстрация установки FluX">
-        <div class="bar">
-          <span style="background:#FF5F56"></span>
-          <span style="background:#FFBD2E"></span>
-          <span style="background:#27C93F"></span>
-          <b style="margin-left:8px">FluX-Setup.exe</b>
+      <div class="stage">
+        <div class="terminal" aria-label="Демонстрация установки FluX">
+          <div class="bar">
+            <span style="background:#FF5F56"></span>
+            <span style="background:#FFBD2E"></span>
+            <span style="background:#27C93F"></span>
+            <span class="t">FluX-Setup.exe</span>
+          </div>
+          <div class="body">
+            <div class="row"><span class="dim">$</span><span>скачать и запустить</span></div>
+            <div class="row"><span class="ok">✔</span><span>профиль: %LOCALAPPDATA%\Programs\FluX</span></div>
+            <div class="row"><span class="ok">✔</span><span>ярлыки: рабочий стол и «Пуск»</span></div>
+            <div class="row"><span class="ok">✔</span><span>права администратора не нужны</span></div>
+            <div class="bar-progress"><i id="term-progress"></i></div>
+            <div class="row"><span class="dim">$</span><span>flux --start</span></div>
+            <div class="row"><span class="cy">FluX запущен<span class="cur"></span></span></div>
+          </div>
         </div>
-        <div class="body">
-          <div class="dim">$ скачать и запустить</div>
-          <div class="ok">✔ Профиль: %LOCALAPPDATA%\Programs\FluX</div>
-          <div class="ok">✔ Ярлыки: рабочий стол и «Пуск»</div>
-          <div class="ok">✔ Права администратора не нужны</div>
-          <div class="dim">$ flux --start</div>
-          <div class="cy">FluX запущен<span class="cur"></span></div>
-        </div>
+        <div class="float-tag"><span class="dot"></span>установка за минуту</div>
       </div>
     </section>
   </div>
@@ -276,6 +365,7 @@
   <div class="wrap">
     <section id="features">
       <div class="sec-head reveal">
+        <p class="idx">01 · возможности</p>
         <h2>Что умеет FluX</h2>
         <p>Один установщик — всё, что нужно для личной игровой полки.</p>
       </div>
@@ -285,7 +375,7 @@
         <div class="card reveal"><div class="ic">⬇️</div><h3>Умные загрузки</h3><p>Скачивание с докачкой, очередь с восстановлением и проверка SHA-256 после загрузки.</p></div>
         <div class="card reveal"><div class="ic">🎮</div><h3>Запуск и учёт</h3><p>Игры запускаются прямо из библиотеки, время игровых сессий записывается автоматически.</p></div>
         <div class="card reveal"><div class="ic">🛠️</div><h3>Конструктор игр</h3><p>Кабинет создателя: загрузи билд, обложку, логотип и отправь на модерацию.</p></div>
-        <div class="card reveal"><div class="ic">🛡️</div><h3>Безопасность</h3><p>Локальные данные, пароль только как PBKDF2-хэш, вход без привязки к почте по умолчанию.</p></div>
+        <div class="card reveal"><div class="ic">🛡️</div><h3>Безопасность</h3><p>Локальные данные, пароль только как PBKDF2-хэш, вход без привязки к почте.</p></div>
       </div>
     </section>
   </div>
@@ -293,12 +383,13 @@
   <div class="wrap">
     <section id="steps">
       <div class="sec-head reveal">
-        <h2>Как начать</h2>
-        <p>Три шага до первой запущенной игры.</p>
+        <p class="idx">02 · как начать</p>
+        <h2>Четыре шага до запущенной игры</h2>
+        <p>Один файл — и через пару минут первая игра в библиотеке.</p>
       </div>
       <div class="steps">
-        <div class="step reveal"><div class="num">01</div><h3>Скачай</h3><p>Загрузи установщик одним файлом — ничего дополнительного ставить не нужно.</p></div>
-        <div class="step reveal"><div class="num">02</div><h3>Запусти</h3><p>Двойной клик: приложение ставится в профиль и создаёт ярлыки.</p></div>
+        <div class="step reveal"><div class="num">01</div><h3>Скачай</h3><p>Один файл установщика — ничего дополнительно ставить не нужно.</p></div>
+        <div class="step reveal"><div class="num">02</div><h3>Запусти</h3><p>Клик мышью: приложение ставится в профиль и создаёт ярлыки.</p></div>
         <div class="step reveal"><div class="num">03</div><h3>Создай аккаунт</h3><p>Логин, пароль и никнейм — вход сразу, без писем и кодов.</p></div>
         <div class="step reveal"><div class="num">04</div><h3>Играй</h3><p>Добавляй игры в библиотеку и запускай в один клик.</p></div>
       </div>
@@ -307,49 +398,72 @@
 
   <div class="wrap">
     <div class="download" id="download">
+      <div class="ring"></div>
       <h2>Готов начать?</h2>
-      <p>FluX устанавливается за минуту. Файл один, подпись платформы не требуется, права администратора не нужны.</p>
+      <p>FluX устанавливается за минуту. Один файл, права администратора не нужны, игры бесплатно.</p>
       <a class="btn" id="dl-main" href="https://github.com/CodeXyLabs/FluX/releases/download/v1.0.0/FluX-Setup.exe"><span class="dl">↓</span> Скачать FluX для Windows</a>
       <p class="dl-state" id="dl-state"></p>
-      <p class="note">Windows 10/11 · x64 · FluX 1.0.0</p>
+      <div class="dl-meta">
+        <span class="pill">Windows 10/11</span>
+        <span class="pill">x64</span>
+        <span class="pill">FluX 1.0.0</span>
+        <span class="pill">85,2 МБ</span>
+      </div>
     </div>
   </div>
 </main>
 
 <footer>
   <div class="wrap cols">
-    <div>© 2026 FluX. Внутренний проект для витрины и лаунчера игр.</div>
-    <div class="mono">flux · v1.0.0 · win-x64</div>
+    <div>
+      <span class="logo">
+        <svg viewBox="0 0 64 64" width="16" height="16" fill="none"><circle cx="32" cy="32" r="21" stroke="#C6F432" stroke-width="7"/><circle cx="32" cy="32" r="7" fill="#8AE8FF"/></svg>
+      </span>
+      © 2026 FluX · витрина и лаунчер игр
+    </div>
+    <div>
+      <span class="mono">flux · v1.0.0 · win-x64</span>
+      <a href="https://github.com/CodeXyLabs/FluX" target="_blank" rel="noopener">GitHub ↗</a>
+      <a href="https://github.com/CodeXyLabs/FluX/releases" target="_blank" rel="noopener">Релизы</a>
+    </div>
   </div>
 </footer>
 
 <script>
-  // Плавное появление секций при прокрутке (с учётом prefers-reduced-motion)
+  // Появление секций при прокрутке (с учётом prefers-reduced-motion)
   var io = new IntersectionObserver(function (entries) {
     entries.forEach(function (e) { if (e.isIntersecting) e.target.classList.add("on"); });
   }, { threshold: 0.12 });
   document.querySelectorAll(".reveal").forEach(function (el) { io.observe(el); });
 
-  // Интерактив в терминале: клик по строке запуска
-  var termStart = document.querySelector(".terminal .body");
-  if (termStart) {
-    termStart.addEventListener("click", function () {
-      var ln = document.querySelector(".terminal .body .cy");
-      if (ln) ln.classList.contains("st") || (function () {
-        var node = ln; while (node && node.nodeType === 3) node = node.parentNode;
-        setTimeout(function () { ln.style.color = "#E6E8EB"; }, 60);
-      }());
-    });
-  }
-  document.querySelectorAll(".terminal .cy").forEach(function (n) { n.classList.add("st"); });
+  // Шапка: плотнее после прокрутки
+  var header = document.getElementById("site-header");
+  function onScroll() { if (window.scrollY > 8) header.classList.add("scrolled"); else header.classList.remove("scrolled"); }
+  window.addEventListener("scroll", onScroll, { passive: true });
+  onScroll();
 
-  // Обратная связь по скачиванию + показ реального размера файла
+  // Запуск прогресса терминала после появления секции на экране
+  var termStage = document.querySelector(".stage");
+  if (termStage && "IntersectionObserver" in window) {
+    var termObserver = new IntersectionObserver(function (entries) {
+      entries.forEach(function (e) {
+        if (e.isIntersecting) {
+          var bar = document.getElementById("term-progress");
+          if (bar) bar.classList.add("run");
+          termObserver.disconnect();
+        }
+      });
+    }, { threshold: 0.4 });
+    termObserver.observe(termStage);
+  }
+
+  // Обратная связь по скачиванию
   function wireDownload(id, stateId) {
     var link = document.getElementById(id);
     if (!link) return;
     link.addEventListener("click", function () {
       var st = document.getElementById(stateId);
-      if (st) st.textContent = "Загрузка началась. Если не сохранилось — проверьте папку «Загрузки».";
+      if (st) st.textContent = "Загрузка началась… если файл не сохранился, проверьте папку «Загрузки».";
     });
   }
   wireDownload("hero-dl", "dl-state");
